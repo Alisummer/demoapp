@@ -4,7 +4,7 @@ metadata:
   name: myapp
   namespace: demo
 spec:
-  replicas: 1
+  replicas: 2
   revisionHistoryLimit: 2
   selector:
     matchLabels:
@@ -24,4 +24,4 @@ spec:
             memory: "128Mi"
             cpu: "200m"
         ports:
-        - containerPort: 8080
+        - containerPort: 8081
