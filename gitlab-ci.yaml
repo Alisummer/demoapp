@@ -1,0 +1,63 @@
+image: pro1_executor
+
+stages:
+  - unittest
+  - analyze
+  - deploy
+  - apitest
+
+variables:
+  SONAR_HOST: "http://192.168.0.29:9000"
+  SONAR_PROJ: "pro_1"
+  SONAR_LOGIN: "b3135dd602b61ce7ff5f4202a3ec2ec0865fa7f5"
+
+services:
+  - redis:3
+  - mongo:3.2
+
+Unittest:
+  stage: unittest
+  script:
+  - pip install nose
+  - python -m runtest xtest
+
+Sonar_Preview:
+  image: sonar_scanner
+  stage: analyze
+  script:
+    - sonar-scanner
+      -Dsonar.analysis.mode=preview
+      -Dsonar.gitlab.commit_sha=$CI_BUILD_REF
+      -Dsonar.gitlab.ref_name=$CI_BUILD_REF_NAME
+      -Dsonar.gitlab.project_id=$CI_PROJECT_ID
+      -Dsonar.projectKey=$SONAR_PROJ
+      -Dsonar.sources=.
+      -Dsonar.host.url=$SONAR_HOST
+      -Dsonar.login=$SONAR_LOGIN
+  except:
+    - master
+
+Sonar_Analyze:
+  image: sonar-scanner
+  stage: analyze
+  script:
+    - sonar-scanner
+      -Dsonar.projectKey=$SONAR_PROJ
+      -Dsonar.sources=.
+      -Dsonar.host.url=$SONAR_HOST
+      -Dsonar.login=$SONAR_LOGIN
+  only:
+    - master
+
+Deploy_TestServer:
+  stage: deploy
+  script: echo "deploy"
+
+API_test:
+  stage: apitest
+  script:
+    - cd /
+    - git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.xxx.com/yx/apitest.git
+    - cd apitest
+    - pip install -r requirements.txt
+    - python runtest.py
